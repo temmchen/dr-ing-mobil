@@ -461,17 +461,22 @@ async function pruefePasswortAusSession(idx){const s=sitzungLesen();const pw=s&&
 function abmelden(){sitzungVerwerfen();SESSION=null;M=null;vaultKeys.clear();blobCache.clear();$("#app").classList.remove("offen");$("#login").style.display="flex";$("#pw").value="";loginStatus("")}
 function loginStatus(t,f){const s=$("#login-status");s.textContent=t;s.classList.toggle("fehler",!!f)}
 function appZeigen(){$("#login").style.display="none";$("#app").classList.add("offen");kopf();zeigeTab(TAB)}
-$("#login-form").addEventListener("submit",async ev=>{
-  ev.preventDefault();const pw=$("#pw").value;if(!pw)return;loginStatus("Prüfe Passwort …");$("#login-form button").disabled=true;
-  try{INDEX=INDEX||await ladeIndex();const s=await pruefePasswort(pw,INDEX);if(!s){loginStatus("Passwort stimmt nicht.",true);return}
-    s.pw=pw;SESSION=s;sitzungSpeichern(s,$("#merken").checked);M=await ladeManifest(s);appZeigen()}
-  catch(e){loginStatus(fehlerText(e),true)}finally{$("#login-form button").disabled=false}
-});
+async function anmelden(pw,merken){
+  if(!pw)return false;loginStatus("Prüfe Passwort …");$("#login-form button").disabled=true;
+  try{INDEX=INDEX||await ladeIndex();const s=await pruefePasswort(pw,INDEX);if(!s){loginStatus("Passwort stimmt nicht.",true);return false}
+    s.pw=pw;SESSION=s;sitzungSpeichern(s,merken);M=await ladeManifest(s);appZeigen();return true}
+  catch(e){loginStatus(fehlerText(e),true);return false}finally{$("#login-form button").disabled=false}
+}
+$("#login-form").addEventListener("submit",ev=>{ev.preventDefault();anmelden($("#pw").value,$("#merken").checked)});
+/* QR-Code vom Mac: …/#zugang=<Passwort> meldet direkt an (der Teil hinter # verlässt das Gerät nie). */
+function zugangAusAdresse(){const m=/[#&]zugang=([^&]+)/.exec(location.hash||"");if(!m)return"";try{history.replaceState(null,"",location.pathname+location.search)}catch(e){}try{return decodeURIComponent(m[1])}catch(e){return""}}
 $("#kopf-neu").onclick=()=>pruefeAktualisierung(true);
 (async function start(){
   const th=lsGet("dring_theme","");if(th)document.documentElement.setAttribute("data-theme",th);
   if("serviceWorker"in navigator){try{await navigator.serviceWorker.register("sw.js")}catch(e){}}
   setzeOffline(!navigator.onLine);
+  const qrPw=zugangAusAdresse();
+  if(qrPw){$("#pw").value=qrPw;$("#merken").checked=true;if(await anmelden(qrPw,true))return;}
   const alt=sitzungLesen();
   if(alt&&alt.s&&alt.s.vaults){SESSION=alt.s;try{M=await ladeManifest(SESSION);appZeigen();pruefeAktualisierung()}catch(e){if(e.status===404){toast("Tresor wurde neu gebaut – bitte neu anmelden");abmelden()}else{loginStatus(fehlerText(e),true)}}}
   document.addEventListener("keydown",ev=>{if(ev.key==="Escape"){if(V.offen)viewerSchliessen();else blattSchliessen()}});
