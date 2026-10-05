@@ -209,7 +209,9 @@ async function entschluesseleBlock(key,puffer){const b=new Uint8Array(puffer);if
 /* ─────────────────────────── Sitzung & Daten ─────────────────────────── */
 let SESSION=null, INDEX=null, M=null, TAB="bib", OFFLINE=!navigator.onLine;
 const vaultKeys=new Map(), blobCache=new Map();
-const F={q:"",kat:"",status:""};
+const F={q:"",kat:"",status:"",ordner:""};
+const imOrdner=(e,p)=>!p||(p==="/"?!e.ordner:((e.ordner||"")===p||(e.ordner||"").startsWith(p+"/")));
+function bibGefiltert(){const q=fold(F.q);return (M.eintraege||[]).filter(e=>(!F.kat||e.kategorie===F.kat)&&(!F.kat||imOrdner(e,F.ordner))&&(!F.status||(e.status||"neu")===F.status)&&(!q||fold([e.titel,e.name,e.autoren,e.jahr,(e.tags||[]).join(" "),e.notiz,e.quelle,e.ordner].join(" ")).includes(q)))}
 async function ladeIndex(){const r=await fetch("vaults/index.json",{cache:"no-store"});if(!r.ok)throw new Error("index.json fehlt ("+r.status+")");return r.json()}
 async function pruefePasswort(pw,idx){
   for(const pr of idx.principals||[]){
@@ -238,20 +240,20 @@ function zeichneBib(){
   const main=$("#main");
   const alle=M.eintraege||[];
   const zaehl={};alle.forEach(e=>{zaehl[e.kategorie]=(zaehl[e.kategorie]||0)+1});
-  const q=fold(F.q);
-  const liste=alle.filter(e=>(!F.kat||e.kategorie===F.kat)&&(!F.status||(e.status||"neu")===F.status)&&(!q||fold([e.titel,e.name,e.autoren,e.jahr,(e.tags||[]).join(" "),e.notiz,e.quelle].join(" ")).includes(q)));
+  const ordner=F.kat?Array.from(new Set(alle.filter(e=>e.kategorie===F.kat&&e.ordner).map(e=>e.ordner))).sort():[];
   main.innerHTML=`<div class="suche"><span class="muted">⌕</span><input id="q" type="search" placeholder="Titel, Autor, Tag, Notiz …" value="${esc(F.q)}"></div>
     <div class="chips"><span class="chip ${!F.kat?"aktiv":""}" data-kat="">Alle ${alle.length}</span>${(M.kategorien||[]).filter(k=>zaehl[k.id]).map(k=>`<span class="chip ${F.kat===k.id?"aktiv":""}" data-kat="${k.id}"><span class="punkt" style="background:${k.farbe}"></span>${esc(k.name)} ${zaehl[k.id]}</span>`).join("")}</div>
+    ${ordner.length?`<div class="chips" style="padding-top:0"><span class="chip ${!F.ordner?"aktiv":""}" data-o="">Alle Ordner</span><span class="chip ${F.ordner==="/"?"aktiv":""}" data-o="/">oben</span>${ordner.map(o=>`<span class="chip ${F.ordner===o?"aktiv":""}" data-o="${esc(o)}">▸ ${esc(o)}</span>`).join("")}</div>`:""}
     <div class="chips" style="padding-top:0">${Object.entries(STATUS).map(([k,n])=>`<span class="chip ${F.status===k?"aktiv":""}" data-st="${k}">${n}</span>`).join("")}</div>
     <div class="liste" id="bibListe"></div>`;
   const inp=$("#q");inp.addEventListener("input",()=>{F.q=inp.value;zeichneBibListe(liste=>{})});
-  $$("[data-kat]",main).forEach(c=>c.addEventListener("click",()=>{F.kat=c.dataset.kat;zeichneBib()}));
+  $$("[data-kat]",main).forEach(c=>c.addEventListener("click",()=>{F.kat=c.dataset.kat;F.ordner="";zeichneBib()}));
+  $$("[data-o]",main).forEach(c=>c.addEventListener("click",()=>{F.ordner=c.dataset.o;zeichneBib()}));
   $$("[data-st]",main).forEach(c=>c.addEventListener("click",()=>{F.status=F.status===c.dataset.st?"":c.dataset.st;zeichneBib()}));
   zeichneBibListe();
 }
 function zeichneBibListe(){
-  const alle=M.eintraege||[];const q=fold(F.q);
-  const liste=alle.filter(e=>(!F.kat||e.kategorie===F.kat)&&(!F.status||(e.status||"neu")===F.status)&&(!q||fold([e.titel,e.name,e.autoren,e.jahr,(e.tags||[]).join(" "),e.notiz,e.quelle].join(" ")).includes(q)));
+  const liste=bibGefiltert();
   const box=$("#bibListe");if(!box)return;
   if(!liste.length){box.innerHTML=`<div class="leer">Keine Einträge.</div>`;return}
   let letzterKopf="";const teile=[];
@@ -266,7 +268,7 @@ function zeichneBibListe(){
 function gruppenKopf(iso){if(!iso)return"Älter";const t=tageBis(iso.slice(0,10));if(t>=0)return"Heute";if(t>=-1)return"Gestern";if(t>=-7)return"Diese Woche";if(t>=-30)return"Letzte 30 Tage";return iso.slice(0,7).replace(/(\d{4})-(\d{2})/,"$2/$1")}
 function eintragHTML(e){
   const art=e.art==="video"?"video":e.art==="link"?"link":e.art==="mail"?"mail":e.art==="notiz"||e.art==="text"?"notiz":e.art==="tex"?"tex":e.art==="bild"?"bild":"pdf";
-  const sub=[e.autoren,e.jahr,e.anbieter,e.quelle].filter(Boolean).join(" · ");
+  const sub=[e.ordner?"▸ "+e.ordner:"",e.autoren,e.jahr,e.anbieter,e.quelle].filter(Boolean).join(" · ");
   return`<div class="eintrag" data-id="${e.id}"><span class="ic" style="background:${katFarbe(e.kategorie)}">${icon(art)}</span><div><div class="t">${esc(e.titel||e.name)}</div><div class="s">${esc(sub||katName(e.kategorie))}</div>${(e.tags||[]).length?`<div class="s">${e.tags.map(t=>`<span class="tagz">${esc(t)}</span>`).join("")}</div>`:""}</div><div class="r"><span class="badge ${e.status||"neu"}">${STATUS[e.status]||"neu"}</span>${e.prio?`<span style="color:var(--warn)">${"★".repeat(e.prio)}</span>`:""}${e.fid?`<span>${groesse(e.groesse)}</span>`:""}</div></div>`;
 }
 function zeigeEintrag(id){
@@ -277,7 +279,7 @@ function zeigeEintrag(id){
   blattOeffnen(e.titel||e.name,`
     ${e.bild?`<img src="${esc(e.bild)}" style="width:100%;border-radius:10px;margin-bottom:10px" alt="">`:""}
     <div class="aktionen">${datei}${link}${e.doi?`<a class="btn sm" href="https://doi.org/${esc(e.doi)}" target="_blank" rel="noopener">DOI</a>`:""}</div>
-    <dl class="kv">${e.autoren?`<dt>Autoren</dt><dd>${esc(e.autoren)}</dd>`:""}${e.jahr?`<dt>Jahr</dt><dd>${e.jahr}</dd>`:""}${e.quelle?`<dt>Quelle</dt><dd>${esc(e.quelle)}</dd>`:""}<dt>Kategorie</dt><dd>${esc(katName(e.kategorie))}</dd><dt>Status</dt><dd><span class="badge ${e.status||"neu"}">${STATUS[e.status]||"neu"}</span> ${e.prio?"★".repeat(e.prio):""}</dd>${e.mail?`<dt>Von</dt><dd>${esc(e.mail.von)}</dd><dt>An</dt><dd>${esc(e.mail.an)}</dd><dt>Datum</dt><dd>${fmtZeit(e.mail.datum)}</dd>`:""}${e.seiten?`<dt>Seiten</dt><dd>${e.seiten}</dd>`:""}<dt>Abgelegt</dt><dd>${fmtZeit(e.hinzugefuegt)}</dd>${e.name&&e.name!==e.titel?`<dt>Datei</dt><dd class="muted">${esc(e.name)}</dd>`:""}</dl>
+    <dl class="kv">${e.autoren?`<dt>Autoren</dt><dd>${esc(e.autoren)}</dd>`:""}${e.jahr?`<dt>Jahr</dt><dd>${e.jahr}</dd>`:""}${e.quelle?`<dt>Quelle</dt><dd>${esc(e.quelle)}</dd>`:""}<dt>Kategorie</dt><dd>${esc(katName(e.kategorie))}${e.ordner?" › "+esc(e.ordner):""}</dd><dt>Status</dt><dd><span class="badge ${e.status||"neu"}">${STATUS[e.status]||"neu"}</span> ${e.prio?"★".repeat(e.prio):""}</dd>${e.mail?`<dt>Von</dt><dd>${esc(e.mail.von)}</dd><dt>An</dt><dd>${esc(e.mail.an)}</dd><dt>Datum</dt><dd>${fmtZeit(e.mail.datum)}</dd>`:""}${e.seiten?`<dt>Seiten</dt><dd>${e.seiten}</dd>`:""}<dt>Abgelegt</dt><dd>${fmtZeit(e.hinzugefuegt)}</dd>${e.name&&e.name!==e.titel?`<dt>Datei</dt><dd class="muted">${esc(e.name)}</dd>`:""}</dl>
     ${(e.tags||[]).length?`<div style="margin-top:8px">${e.tags.map(t=>`<span class="tagz">${esc(t)}</span>`).join("")}</div>`:""}
     ${e.beschreibung?`<p class="muted" style="font-size:14px">${esc(e.beschreibung)}</p>`:""}
     ${e.notiz?`<div class="notiz">${esc(e.notiz)}</div>`:""}
