@@ -130,6 +130,31 @@ svg.gantt text{font-family:inherit;fill:var(--text-2)}
 #viewer-meldung{position:absolute;left:50%;top:40%;transform:translate(-50%,-50%);color:#ddd;font-size:14px;background:rgba(0,0,0,.5);padding:10px 16px;border-radius:10px}
 #viewer-leiste{display:flex;align-items:center;justify-content:center;gap:16px;padding:6px 0 calc(var(--sab) + 6px);background:#1c1c1e;color:#fff;font-size:13px}
 #viewer-leiste button{background:#333;border:0;color:#fff;width:36px;height:30px;border-radius:8px;font-size:18px}
+
+/* ─────────────────────────── Notizen vom Handy: Editor, Postfach ─────────────────────────── */
+.fab{position:fixed;right:18px;bottom:calc(var(--sab) + 80px);width:54px;height:54px;border-radius:50%;background:var(--accent);color:#fff;border:0;font-size:32px;line-height:1;box-shadow:0 6px 18px rgba(0,0,0,.28);z-index:6;display:grid;place-items:center}
+.badge.entwurf{background:var(--surface-2);color:var(--text-2)}.badge.wartet{background:#FDF1DC;color:#B45309}.badge.gesendet{background:#DCFCE7;color:#15803D}.badge.fehler{background:#FDE8E8;color:#C62828}
+.eintrag.lokal .ic{outline:2px dashed rgba(255,255,255,.7);outline-offset:-4px}
+.eintrag.lokal .r .badge{max-width:38vw;white-space:normal;text-align:right;line-height:1.3;padding:2px 6px}
+#editor{position:fixed;inset:0;z-index:31;background:var(--bg);display:flex;flex-direction:column;transform:translateY(100%);transition:transform .25s}
+#editor.offen{transform:none}
+#editor .ek{display:flex;align-items:center;gap:8px;padding:calc(var(--sat) + 6px) 8px 6px;background:var(--surface);border-bottom:1px solid var(--border)}
+#editor .ek h2{flex:1;font-size:15px;margin:0;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#editor .ek button{background:none;border:0;color:var(--accent);font-size:16px;padding:6px 8px;font-weight:600}
+#editor .ei{flex:1;overflow:auto;-webkit-overflow-scrolling:touch;padding:10px 14px calc(var(--sab) + 16px);display:flex;flex-direction:column;gap:8px}
+#editor input,#editor textarea{width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--border);background:var(--surface);font-size:16px;color:var(--text)}
+#editor input:focus,#editor textarea:focus{outline:none;border-color:var(--accent)}
+#editor input:disabled{opacity:.6}
+#editor textarea{flex:1;min-height:38vh;resize:none;line-height:1.5}
+#editor .zeile{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+#editor .ef{font-size:13px;color:var(--text-3);display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center}
+.hinweis{font-size:13px;color:var(--text-3);margin:4px 14px 8px;line-height:1.4}
+.frage{position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;padding:24px}
+.frage .box{background:var(--surface);border-radius:16px;padding:18px;width:min(360px,100%);box-shadow:0 12px 40px rgba(0,0,0,.3)}
+.frage p{margin:0 0 14px;white-space:pre-wrap}
+.frage .aktionen{justify-content:flex-end;margin:0}
+.pf-token{width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--border);background:var(--surface-2);font-size:15px;margin:8px 0 4px;color:var(--text)}
+details summary{cursor:pointer;color:var(--accent);font-weight:600;font-size:14px;margin-top:8px}
 </style>
 </head>
 <body>
@@ -171,9 +196,22 @@ svg.gantt text{font-family:inherit;fill:var(--text-2)}
 <div id="blatt" class="blatt versteckt"><div class="griff"></div><div class="bk"><h2 id="blatt-titel"></h2><button id="blatt-zu">✕</button></div><div class="bi" id="blatt-inhalt"></div></div>
 
 <div id="viewer">
-  <div class="vk"><button id="viewer-zu">‹ Zurück</button><h2 id="viewer-titel"></h2><button id="viewer-teilen">Teilen</button></div>
+  <div class="vk"><button id="viewer-zu">‹ Zurück</button><h2 id="viewer-titel"></h2><button id="viewer-edit" class="versteckt">Bearbeiten</button><button id="viewer-teilen">Teilen</button></div>
   <div id="viewer-inhalt"><div id="viewer-seiten"></div><div id="viewer-meldung" class="versteckt"></div></div>
   <div id="viewer-leiste" class="versteckt"><button id="z-minus">−</button><span id="z-prozent">100 %</span><button id="z-plus">+</button><span id="seitenzahl"></span></div>
+</div>
+
+<!-- Notiz-Editor (Notizen vom Handy → Postfach → Mac) -->
+<div id="editor">
+  <div class="ek"><button id="e-zurueck">‹ Zurück</button><h2 id="e-kopf">Neue Notiz</h2><button id="e-fertig">Fertig</button></div>
+  <div class="ei">
+    <input id="e-titel" placeholder="Titel" autocapitalize="sentences">
+    <div class="zeile"><input id="e-ordner" list="e-ordner-liste" placeholder="Ordner (z. B. Exzerpte)" autocapitalize="none" autocorrect="off"><datalist id="e-ordner-liste"></datalist><input id="e-tags" placeholder="Tags, mit Komma" autocapitalize="none" autocorrect="off"></div>
+    <div id="e-quelle" class="ef versteckt"></div>
+    <textarea id="e-text" placeholder="Gedanken, Zitate mit Seitenangabe, offene Fragen … (Markdown)"></textarea>
+    <div id="e-status" class="ef"></div>
+    <div class="ef"><button class="btn sm" id="e-teilen">Teilen</button><button class="btn sm" id="e-loeschen">Löschen</button></div>
+  </div>
 </div>
 <div id="toast" class="toast versteckt"></div>
 
@@ -203,8 +241,11 @@ function b64zu(s){const bin=atob(s);const out=new Uint8Array(bin.length);for(let
 async function leiteKekRoh(passwort,saltB64,iter){const mat=await crypto.subtle.importKey("raw",new TextEncoder().encode(passwort.normalize("NFC")),"PBKDF2",false,["deriveBits"]);return new Uint8Array(await crypto.subtle.deriveBits({name:"PBKDF2",salt:b64zu(saltB64),iterations:iter,hash:"SHA-256"},mat,256))}
 const importKek=roh=>crypto.subtle.importKey("raw",roh,{name:"AES-GCM"},false,["decrypt"]);
 async function entschluesseleJSON(key,ivB64,ctB64){return JSON.parse(new TextDecoder().decode(await crypto.subtle.decrypt({name:"AES-GCM",iv:b64zu(ivB64)},key,b64zu(ctB64))))}
-const importiereVaultKey=kB64=>crypto.subtle.importKey("raw",b64zu(kB64),{name:"AES-GCM"},false,["decrypt"]);
+const importiereVaultKey=kB64=>crypto.subtle.importKey("raw",b64zu(kB64),{name:"AES-GCM"},false,["encrypt","decrypt"]);
 async function entschluesseleBlock(key,puffer){const b=new Uint8Array(puffer);if(b.length<13)throw new Error("Datei beschädigt");return crypto.subtle.decrypt({name:"AES-GCM",iv:b.slice(0,12)},key,b.slice(12))}
+/* Gegenstück für das Postfach (server.py entschlüsselt mit demselben Tresorschlüssel): 12-B-Nonce || AES-256-GCM */
+async function verschluesseleBlock(key,bytes){const iv=crypto.getRandomValues(new Uint8Array(12));const ct=new Uint8Array(await crypto.subtle.encrypt({name:"AES-GCM",iv},key,bytes));const out=new Uint8Array(12+ct.length);out.set(iv);out.set(ct,12);return out}
+function b64von(b){let s="";for(let i=0;i<b.length;i+=0x8000)s+=String.fromCharCode.apply(null,b.subarray(i,i+0x8000));return btoa(s)}
 
 /* ─────────────────────────── Sitzung & Daten ─────────────────────────── */
 let SESSION=null, INDEX=null, M=null, TAB="bib", OFFLINE=!navigator.onLine;
@@ -268,17 +309,19 @@ function zeichneBibListe(){
 function gruppenKopf(iso){if(!iso)return"Älter";const t=tageBis(iso.slice(0,10));if(t>=0)return"Heute";if(t>=-1)return"Gestern";if(t>=-7)return"Diese Woche";if(t>=-30)return"Letzte 30 Tage";return iso.slice(0,7).replace(/(\d{4})-(\d{2})/,"$2/$1")}
 function eintragHTML(e){
   const art=e.art==="video"?"video":e.art==="link"?"link":e.art==="mail"?"mail":e.art==="notiz"||e.art==="text"?"notiz":e.art==="tex"?"tex":e.art==="bild"?"bild":"pdf";
-  const sub=[e.ordner?"▸ "+e.ordner:"",e.autoren,e.jahr,e.anbieter,e.quelle].filter(Boolean).join(" · ");
+  const sub=[e.ordner?"▸ "+e.ordner:"",e.autoren,e.jahr,e.anbieter,e.quelle,e.mobil&&e.mobil.geraet?"vom "+e.mobil.geraet:""].filter(Boolean).join(" · ");
   return`<div class="eintrag" data-id="${e.id}"><span class="ic" style="background:${katFarbe(e.kategorie)}">${icon(art)}</span><div><div class="t">${esc(e.titel||e.name)}</div><div class="s">${esc(sub||katName(e.kategorie))}</div>${(e.tags||[]).length?`<div class="s">${e.tags.map(t=>`<span class="tagz">${esc(t)}</span>`).join("")}</div>`:""}</div><div class="r"><span class="badge ${e.status||"neu"}">${STATUS[e.status]||"neu"}</span>${e.prio?`<span style="color:var(--warn)">${"★".repeat(e.prio)}</span>`:""}${e.fid?`<span>${groesse(e.groesse)}</span>`:""}</div></div>`;
 }
 function zeigeEintrag(id){
   const e=(M.eintraege||[]).find(x=>x.id===id);if(!e)return;
   const link=e.url?`<a class="btn sm" href="${esc(e.url)}" target="_blank" rel="noopener">${e.art==="video"?"▶ Video öffnen":"↗ Seite öffnen"}</a>`:"";
   const datei=e.fid?`<button class="btn sm primary" id="b-oeffnen">${e.anzeigbar?"Öffnen":"Teilen / Sichern"}</button><button class="btn sm" id="b-teilen">Teilen</button>`:(e.zu_gross?`<span class="muted">Datei zu groß fürs Handy (${groesse(e.groesse)})</span>`:"");
+  const istNotiz=(e.kategorie==="notizen"||e.kategorie==="berichte");
+  const exzerpt=istNotiz?(e.fid&&["md","txt"].includes(String(e.ext||"").toLowerCase())?`<button class="btn sm" id="b-bearbeiten">Bearbeiten</button>`:""):`<button class="btn sm" id="b-exzerpt">Exzerpt</button>`;
   const korr=(M.korrespondenz||[]).filter(k=>(k.dateien||[]).includes(e.id));
   blattOeffnen(e.titel||e.name,`
     ${e.bild?`<img src="${esc(e.bild)}" style="width:100%;border-radius:10px;margin-bottom:10px" alt="">`:""}
-    <div class="aktionen">${datei}${link}${e.doi?`<a class="btn sm" href="https://doi.org/${esc(e.doi)}" target="_blank" rel="noopener">DOI</a>`:""}</div>
+    <div class="aktionen">${datei}${link}${e.doi?`<a class="btn sm" href="https://doi.org/${esc(e.doi)}" target="_blank" rel="noopener">DOI</a>`:""}${exzerpt}</div>
     <dl class="kv">${e.autoren?`<dt>Autoren</dt><dd>${esc(e.autoren)}</dd>`:""}${e.jahr?`<dt>Jahr</dt><dd>${e.jahr}</dd>`:""}${e.quelle?`<dt>Quelle</dt><dd>${esc(e.quelle)}</dd>`:""}<dt>Kategorie</dt><dd>${esc(katName(e.kategorie))}${e.ordner?" › "+esc(e.ordner):""}</dd><dt>Status</dt><dd><span class="badge ${e.status||"neu"}">${STATUS[e.status]||"neu"}</span> ${e.prio?"★".repeat(e.prio):""}</dd>${e.mail?`<dt>Von</dt><dd>${esc(e.mail.von)}</dd><dt>An</dt><dd>${esc(e.mail.an)}</dd><dt>Datum</dt><dd>${fmtZeit(e.mail.datum)}</dd>`:""}${e.seiten?`<dt>Seiten</dt><dd>${e.seiten}</dd>`:""}<dt>Abgelegt</dt><dd>${fmtZeit(e.hinzugefuegt)}</dd>${e.name&&e.name!==e.titel?`<dt>Datei</dt><dd class="muted">${esc(e.name)}</dd>`:""}</dl>
     ${(e.tags||[]).length?`<div style="margin-top:8px">${e.tags.map(t=>`<span class="tagz">${esc(t)}</span>`).join("")}</div>`:""}
     ${e.beschreibung?`<p class="muted" style="font-size:14px">${esc(e.beschreibung)}</p>`:""}
@@ -286,6 +329,8 @@ function zeigeEintrag(id){
     ${korr.length?`<h3 class="tag-kopf">Austausch</h3>${korr.map(k=>`<div class="tl" data-korr="${k.id}"><div class="d">${fmtDatum(k.datum)}</div><div><div class="b">${esc(k.betreff)}</div><div class="p">${esc(k.partner||"")}</div></div></div>`).join("")}`:""}`);
   const bo=$("#b-oeffnen");if(bo)bo.onclick=()=>e.anzeigbar?oeffneDatei(e):teileDatei(e,bo);
   const bt=$("#b-teilen");if(bt)bt.onclick=()=>teileDatei(e,bt);
+  const bx=$("#b-exzerpt");if(bx)bx.onclick=()=>{blattSchliessen();neueNotiz({titel:"Exzerpt: "+(e.titel||e.name),quelle_id:e.id,quelle_titel:e.titel||e.name,ordner:notizOrdner().includes("Exzerpte")?"Exzerpte":""})};
+  const bb=$("#b-bearbeiten");if(bb)bb.onclick=()=>{blattSchliessen();bearbeiteEintrag(e)};
   $$("[data-korr]",$("#blatt-inhalt")).forEach(x=>x.addEventListener("click",()=>zeigeKorr(x.dataset.korr)));
 }
 
@@ -345,17 +390,128 @@ function zeigeKorr(id){
   blattOeffnen(`${richt(x.richtung)} ${x.betreff}`,`<dl class="kv"><dt>Datum</dt><dd>${fmtZeit(x.datum)}</dd><dt>Partner</dt><dd>${esc(x.partner||"")}</dd>${x.nachfassen?`<dt>Nachfassen</dt><dd>${fmtDatum(x.nachfassen)}</dd>`:""}<dt>Status</dt><dd>${x.erledigt?"erledigt":"offen"}</dd></dl>${x.inhalt?`<div class="notiz">${esc(x.inhalt)}</div>`:""}${dateien.length?`<div class="tag-kopf">Dateien</div>${dateien.map(eintragHTML).join("")}`:""}`);
   $$(".eintrag",$("#blatt-inhalt")).forEach(el=>el.addEventListener("click",()=>zeigeEintrag(el.dataset.id)));
 }
+/* ─────────────────────────── Notizen vom Handy: lokal sammeln → verschlüsselt ins Postfach (GitHub) → Mac ───────────────────────────
+   Eine Notiz liegt im localStorage (dring_notizen) mit Status entwurf (im Editor) → ausstehend (fertig, noch nicht gesendet)
+   → gesendet (liegt als docs/postfach/<zeit>-<id>.enc im Mobil-Repo) → verschwindet, sobald der Mac sie ins Manifest aufgenommen hat.
+   Verschlüsselt wird mit dem Tresorschlüssel (AES-GCM), geschrieben über die GitHub-Contents-API mit einem Token
+   (aus dem Manifest = vom Mac im Tresor hinterlegt, oder eigener Token auf diesem Gerät). */
+const NOTIZ_KEY="dring_notizen", TOKEN_KEY="dring_token";
+let N=[], E=null, SENDET=false, eTimer=0;
+function notizenLaden(){try{N=JSON.parse(localStorage.getItem(NOTIZ_KEY)||"[]");if(!Array.isArray(N))N=[]}catch(e){N=[]}}
+function notizenSpeichern(){lsSet(NOTIZ_KEY,JSON.stringify(N))}
+const neueId=()=>Array.from(crypto.getRandomValues(new Uint8Array(6)),b=>b.toString(16).padStart(2,"0")).join("");
+function jetzt(){const d=new Date(),p=n=>String(n).padStart(2,"0");return`${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`}
+const stempel=iso=>String(iso||jetzt()).replace(/[-:]/g,"").slice(0,15);
+const tagsAus=s=>String(s||"").split(/[,;\n]/).map(t=>t.trim().replace(/^#/,"")).filter((t,i,a)=>t&&a.indexOf(t)===i).slice(0,30);
+function geraetName(){const ua=navigator.userAgent||"";if(/iPad/.test(ua)||(/Macintosh/.test(ua)&&navigator.maxTouchPoints>1))return"iPad";if(/iPhone/.test(ua))return"iPhone";return"Mobil"}
+function postfachKonfig(){const p=(M&&M.postfach)||{};const eig=lsGet(TOKEN_KEY,"");return{repo:p.repo||"",zweig:p.zweig||"main",pfad:p.pfad||"docs/postfach",api:p.api||"https://api.github.com",token:eig||p.token||"",eigener:!!eig}}
+function frontmatterTrennen(t){t=String(t||"").replace(/\r\n/g,"\n");if(t.startsWith("---\n")){const e=t.indexOf("\n---",4);if(e>=0)return{kopf:t.slice(0,e+4),rumpf:t.slice(e+4).replace(/^\n+/,"")}}return{kopf:"",rumpf:t}}
+function notizOrdner(){return Array.from(new Set((M.eintraege||[]).filter(e=>e.kategorie==="notizen"&&e.ordner).map(e=>e.ordner).concat(N.map(n=>n.ordner).filter(Boolean)))).sort()}
+function statusText(n){if(n.status==="entwurf")return["entwurf","Entwurf"];if(n.status==="gesendet")return["gesendet","an den Mac gesendet"];if(n.fehler)return["fehler",n.fehler];if(!postfachKonfig().token)return["wartet","wartet · kein Schreibzugang"];if(OFFLINE)return["wartet","wartet auf Netz"];return["wartet","wird gesendet …"]}
+function lokalHTML(n){const[k,t]=statusText(n);const sub=[n.bestehend?"bearbeitet":"",n.ordner?"▸ "+n.ordner:"",fmtZeit(n.geaendert)].filter(Boolean).join(" · ");
+  return`<div class="eintrag lokal" data-lokal="${n.id}"><span class="ic" style="background:#15803D">${icon("notiz")}</span><div><div class="t">${esc(n.titel||"Ohne Titel")}</div><div class="s">${esc(sub)}</div>${(n.tags||[]).length?`<div class="s">${n.tags.map(t=>`<span class="tagz">${esc(t)}</span>`).join("")}</div>`:""}</div><div class="r"><span class="badge ${k}">${esc(t)}</span></div></div>`}
 function zeichneNotizen(){
-  const n=(M.eintraege||[]).filter(e=>e.kategorie==="notizen"||e.kategorie==="berichte");
-  $("#main").innerHTML=`<div class="liste">${n.length?n.map(eintragHTML).join(""):`<div class="leer">Noch keine Notizen.</div>`}</div>`;
-  $$(".eintrag").forEach(el=>el.addEventListener("click",()=>{const e=n.find(x=>x.id===el.dataset.id);if(e&&e.fid&&(e.ext==="md"||e.ext==="txt"))oeffneDatei(e);else zeigeEintrag(el.dataset.id)}));
+  const lokal=N.slice().sort((a,b)=>(b.geaendert||"").localeCompare(a.geaendert||""));
+  const ueber=new Set(lokal.filter(n=>n.bestehend).map(n=>n.bestehend.id));
+  const n=(M.eintraege||[]).filter(e=>(e.kategorie==="notizen"||e.kategorie==="berichte")&&!ueber.has(e.id));
+  const pf=postfachKonfig();const offen=N.filter(x=>x.status==="ausstehend").length;
+  $("#main").innerHTML=`<div class="liste">${lokal.length?`<div class="tag-kopf">Auf diesem Gerät</div>${lokal.map(lokalHTML).join("")}`:""}
+    ${offen&&!pf.token?`<p class="hinweis">Kein Schreibzugang: Die Notizen bleiben vorerst hier. Am Mac im Promotionsmanager unter „Mobil“ einen GitHub-Token hinterlegen (oder unter „Mehr“ auf diesem Gerät eintragen) – dann gehen sie verschlüsselt an den Mac.</p>`:""}
+    <div class="tag-kopf">Notizen &amp; Berichte</div>${n.length?n.map(eintragHTML).join(""):`<div class="leer">Noch keine Notizen vom Mac.</div>`}</div>
+    <button class="fab" id="n-neu" title="Neue Notiz" aria-label="Neue Notiz">+</button>`;
+  $$("[data-lokal]").forEach(el=>el.addEventListener("click",()=>{const x=N.find(y=>y.id===el.dataset.lokal);if(x)editorOeffnen(x)}));
+  $$(".eintrag:not(.lokal)").forEach(el=>el.addEventListener("click",()=>{const e=n.find(x=>x.id===el.dataset.id);if(e&&e.fid&&(e.ext==="md"||e.ext==="txt"))oeffneDatei(e);else zeigeEintrag(el.dataset.id)}));
+  $("#n-neu").onclick=()=>neueNotiz({});
+}
+function neueNotiz(v){const n={id:neueId(),titel:v.titel||"",text:v.text||"",ordner:v.ordner||"",tags:v.tags||[],quelle_id:v.quelle_id||"",quelle_titel:v.quelle_titel||"",erstellt:jetzt(),geaendert:jetzt(),status:"entwurf",fehler:"",bestehend:v.bestehend||null};editorOeffnen(n);return n}
+async function bearbeiteEintrag(e){
+  const vorhanden=N.find(n=>n.bestehend&&n.bestehend.id===e.id);if(vorhanden){editorOeffnen(vorhanden);return}
+  try{const{blob}=await holeBlob(e);const{kopf,rumpf}=frontmatterTrennen(await blob.text());
+    neueNotiz({titel:e.titel||e.name,text:rumpf,ordner:e.ordner||"",tags:e.tags||[],quelle_id:e.quelle_id||"",bestehend:{id:e.id,pfad:e.pfad,basis:e.geaendert_datei||"",kopf:kopf,ext:e.ext}})}
+  catch(x){toast("Notiz nicht ladbar: "+fehlerText(x))}
+}
+function editorOeffnen(n){
+  E=n;$("#e-kopf").textContent=n.bestehend?"Notiz bearbeiten":(n.quelle_id?"Exzerpt":"Neue Notiz");
+  $("#e-titel").value=n.titel||"";$("#e-ordner").value=n.ordner||"";$("#e-tags").value=(n.tags||[]).join(", ");$("#e-text").value=n.text||"";
+  $("#e-ordner-liste").innerHTML=notizOrdner().map(o=>`<option value="${esc(o)}">`).join("");
+  const q=$("#e-quelle");const qe=n.quelle_id?(M.eintraege||[]).find(x=>x.id===n.quelle_id):null;
+  if(qe||n.quelle_titel){q.textContent="Bezug: "+(qe?(qe.titel||qe.name):n.quelle_titel);q.classList.remove("versteckt")}else q.classList.add("versteckt");
+  $("#e-ordner").disabled=!!n.bestehend;
+  $("#e-loeschen").textContent=n.bestehend?"Änderung verwerfen":"Löschen";
+  editorStatus();
+  if(V.offen)viewerSchliessen();
+  $("#editor").classList.add("offen");
+  if(!n.titel)setTimeout(()=>$("#e-titel").focus(),300);
+}
+function editorStatus(){const s=$("#e-status");if(!E)return;const[k,t]=statusText(E);s.innerHTML=`<span class="badge ${k}">${esc(t)}</span><span>${E.bestehend?"Vorhandene Notiz vom Mac – wird dort überschrieben":"Landet auf dem Mac unter „Notizen“"}</span>`}
+function editorLesen(){if(!E)return;E.titel=$("#e-titel").value.trim();if(!E.bestehend)E.ordner=$("#e-ordner").value.trim().replace(/^\/+|\/+$/g,"");E.tags=tagsAus($("#e-tags").value);E.text=$("#e-text").value;E.geaendert=jetzt();if(!N.includes(E))N.unshift(E)}
+function editorEntwurf(){clearTimeout(eTimer);eTimer=setTimeout(()=>{if(!E)return;editorLesen();if(E.titel||E.text.trim()){E.status="entwurf";E.fehler="";notizenSpeichern();editorStatus()}},600)}
+["e-titel","e-ordner","e-tags","e-text"].forEach(id=>$("#"+id).addEventListener("input",editorEntwurf));
+function editorSchliessen(){
+  clearTimeout(eTimer);if(!E)return;editorLesen();
+  if(!E.titel&&!E.text.trim()){N=N.filter(n=>n!==E)}else{E.status="ausstehend";E.fehler=""}
+  notizenSpeichern();E=null;$("#editor").classList.remove("offen");
+  if(TAB==="not")zeichneNotizen();postfachSenden();
+}
+$("#e-zurueck").onclick=editorSchliessen;$("#e-fertig").onclick=editorSchliessen;
+$("#e-loeschen").onclick=async()=>{if(!E)return;if(!(await frage(E.bestehend?"Änderung verwerfen? Die Notiz auf dem Mac bleibt, wie sie ist.":"Diese Notiz löschen?")))return;N=N.filter(n=>n!==E);notizenSpeichern();E=null;$("#editor").classList.remove("offen");if(TAB==="not")zeichneNotizen()};
+$("#e-teilen").onclick=async()=>{if(!E)return;editorLesen();notizenSpeichern();const md=(E.titel?"# "+E.titel+"\n\n":"")+E.text;const name=(E.titel||"Notiz").replace(/[\/\\:]/g,"-").slice(0,60)+".md";
+  try{const datei=new File([md],name,{type:"text/markdown"});
+    if(navigator.canShare&&navigator.canShare({files:[datei]}))await navigator.share({files:[datei],title:E.titel||"Notiz"});
+    else if(navigator.share)await navigator.share({title:E.titel||"Notiz",text:md});
+    else ladeHerunter(URL.createObjectURL(new Blob([md],{type:"text/markdown"})),name)}
+  catch(x){if(!x||x.name!=="AbortError")toast("Teilen fehlgeschlagen: "+fehlerText(x))}};
+function frage(text){return new Promise(res=>{const d=document.createElement("div");d.className="frage";d.innerHTML=`<div class="box"><p>${esc(text)}</p><div class="aktionen"><button class="btn sm" data-a="0">Abbrechen</button><button class="btn sm primary" data-a="1">OK</button></div></div>`;d.addEventListener("click",ev=>{const b=ev.target.closest("[data-a]");if(b){d.remove();res(b.dataset.a==="1")}else if(ev.target===d){d.remove();res(false)}});document.body.appendChild(d)})}
+function postfachText(x){if(!x.bestehend)return x.text;const kopf=x.bestehend.kopf?x.bestehend.kopf.replace(/^titel:.*$/m,"titel: "+x.titel)+"\n\n":"";return kopf+x.text}
+async function postfachSenden(laut){
+  if(SENDET||!M)return;const offen=N.filter(n=>n.status==="ausstehend");
+  if(!offen.length){if(laut)toast("Nichts zu senden");return}
+  if(!navigator.onLine){if(laut)toast("Offline – wird gesendet, sobald Netz da ist");return}
+  const pf=postfachKonfig();if(!pf.token||!pf.repo){if(laut)toast("Kein Schreibzugang – am Mac unter „Mobil“ einen Token hinterlegen");return}
+  SENDET=true;let n=0,fehler="";
+  try{const key=await vaultKey(M._vault);
+    for(const x of offen){
+      const nutz={v:1,typ:"notiz",id:x.id,titel:x.titel,text:postfachText(x),ordner:x.ordner,tags:x.tags||[],quelle_id:x.quelle_id||"",erstellt:x.erstellt,geaendert:x.geaendert,geraet:geraetName(),bestehend:x.bestehend?{id:x.bestehend.id,pfad:x.bestehend.pfad,basis:x.bestehend.basis}:null};
+      const chiffrat=await verschluesseleBlock(key,new TextEncoder().encode(JSON.stringify(nutz)));
+      const name=`${stempel(x.geaendert)}-${x.id}.enc`;
+      let r;try{r=await fetch(`${pf.api}/repos/${pf.repo}/contents/${pf.pfad}/${name}`,{method:"PUT",headers:{"Authorization":"Bearer "+pf.token,"Accept":"application/vnd.github+json","Content-Type":"application/json","X-GitHub-Api-Version":"2022-11-28"},body:JSON.stringify({message:"Postfach: Notiz vom "+geraetName(),content:b64von(chiffrat),branch:pf.zweig})})}
+      catch(e){fehler="Keine Verbindung zu GitHub";break}
+      if(r.status===201||r.status===200){x.status="gesendet";x.gesendet_am=jetzt();x.fehler="";n++}
+      else if(r.status===401||r.status===403){x.fehler="GitHub lehnt den Schreibzugang ab ("+r.status+") – Token prüfen";fehler=x.fehler;break}
+      else if(r.status===404){x.fehler="Postfach nicht erreichbar (404) – Token ohne Zugriff auf das Repo?";fehler=x.fehler;break}
+      else if(r.status===422||r.status===409){x.geaendert=jetzt();x.fehler="Name belegt – wird erneut versucht"}
+      else{x.fehler="GitHub antwortet "+r.status;fehler=x.fehler;break}
+      notizenSpeichern();
+    }
+  }catch(e){fehler=fehlerText(e)}
+  finally{SENDET=false;notizenSpeichern();if(n)toast(n+" Notiz(en) an den Mac gesendet – dort in wenigen Minuten unter „Notizen“");else if(fehler&&laut)toast(fehler);if(TAB==="not"||TAB==="mehr")zeigeTab(TAB)}
+}
+function notizenAbgleichen(){
+  let w=false;const alle=M.eintraege||[];
+  N=N.filter(n=>{if(n.status!=="gesendet")return true;
+    if(alle.find(x=>x.id===n.id)){w=true;return false}
+    if(n.bestehend){const e=alle.find(x=>x.id===n.bestehend.id);if(e&&e.geaendert_datei&&e.geaendert_datei!==n.bestehend.basis){w=true;return false}}
+    return true});
+  if(w)notizenSpeichern();
+}
+function postfachKarte(){
+  const pf=postfachKonfig();const offen=N.filter(n=>n.status==="ausstehend").length,ges=N.filter(n=>n.status==="gesendet").length;
+  const zugang=pf.eigener?"eigener Token auf diesem Gerät":pf.token?"aus dem Tresor (Passwort genügt)":"<span style='color:var(--warn)'>fehlt – am Mac unter „Mobil“ hinterlegen</span>";
+  return`<div class="karte"><h3>Notizen vom Handy</h3><p class="muted" style="font-size:14px;margin:0 0 8px">Notizen, die du hier schreibst, gehen verschlüsselt über das Postfach im Mobil-Repo an den Promotionsmanager am Mac und landen dort unter „Notizen“. Ohne Netz bleiben sie hier liegen und werden später gesendet.</p>
+    <dl class="kv"><dt>Schreibzugang</dt><dd>${zugang}</dd><dt>Postfach</dt><dd>${esc(pf.repo||"–")}</dd><dt>Ausstehend</dt><dd>${offen}</dd><dt>Gesendet</dt><dd>${ges}${ges?" · warten auf den Mac":""}</dd></dl>
+    <div class="aktionen"><button class="btn sm primary" id="pf-senden" ${offen?"":"disabled"}>Jetzt senden</button></div>
+    <details><summary>${pf.eigener?"Eigenen Token ändern":"Eigenen GitHub-Token hinterlegen"}</summary><input class="pf-token" id="pf-token" type="password" placeholder="github_pat_…" autocapitalize="none" autocorrect="off"><div class="aktionen"><button class="btn sm" id="pf-token-ok">Speichern</button>${pf.eigener?'<button class="btn sm" id="pf-token-weg">Entfernen</button>':""}</div><p class="muted" style="font-size:13px">Fine-grained Token (github.com → Settings → Developer settings) nur für das Repo ${esc(pf.repo||"dr-ing-mobil")} mit „Contents: Read and write“. Bleibt nur auf diesem Gerät. Einfacher: am Mac im Promotionsmanager unter „Mobil“ hinterlegen – dann steckt er im Tresor.</p></details></div>`;
 }
 function zeichneMehr(){
   const st=M.statistik||{};const alle=(M.eintraege||[]).filter(e=>e.fid);
   $("#main").innerHTML=`<div class="karte"><h3>Stand</h3><dl class="kv"><dt>Gebaut</dt><dd>${fmtZeit(M.erstellt)}</dd><dt>Inhalt</dt><dd>${st.eintraege||0} Einträge · ${st.dateien||0} Dateien · ${groesse(st.bytes||0)}</dd><dt>Zugang</dt><dd>${esc(SESSION.label||"")}</dd></dl>${(st.uebersprungen||[]).length?`<p class="muted" style="font-size:13px">Nicht enthalten (zu groß): ${st.uebersprungen.length}</p>`:""}</div>
+    ${postfachKarte()}
     <div class="karte"><h3>Offline</h3><p class="muted" style="font-size:14px;margin:0 0 8px">Dateien verschlüsselt auf dem Gerät vorhalten, um sie ohne Netz (Zug, Flugzeug) zu lesen.</p><div class="aktionen"><button class="btn sm primary" id="m-laden">Alle Dateien laden (${groesse(alle.reduce((s,e)=>s+(e.groesse||0),0))})</button><button class="btn sm" id="m-lit">Nur Literatur</button><button class="btn sm" id="m-leeren">Offline-Daten löschen</button></div><div id="m-fortschritt" class="muted" style="font-size:13px"></div></div>
     <div class="karte"><h3>Darstellung</h3><div class="aktionen"><button class="btn sm" data-theme="">Automatisch</button><button class="btn sm" data-theme="light">Hell</button><button class="btn sm" data-theme="dark">Dunkel</button></div></div>
     <div class="karte"><h3>Konto</h3><div class="aktionen"><button class="btn sm" id="m-neu">Neu laden</button><button class="btn sm" id="m-abmelden">Abmelden</button></div></div>`;
+  $("#pf-senden").onclick=()=>postfachSenden(true);
+  $("#pf-token-ok").onclick=()=>{const t=$("#pf-token").value.trim();if(!/^(github_pat_|ghp_)[A-Za-z0-9_]{20,}$/.test(t)){toast("Das sieht nicht nach einem GitHub-Token aus (github_pat_… oder ghp_…)");return}lsSet(TOKEN_KEY,t);toast("Token auf diesem Gerät gespeichert");zeichneMehr();postfachSenden()};
+  const weg=$("#pf-token-weg");if(weg)weg.onclick=()=>{try{localStorage.removeItem(TOKEN_KEY)}catch(e){}toast("Eigener Token entfernt");zeichneMehr()};
   $("#m-laden").onclick=ev=>fuerUnterwegs(alle,ev.currentTarget);
   $("#m-lit").onclick=ev=>fuerUnterwegs(alle.filter(e=>e.kategorie==="literatur"),ev.currentTarget);
   $("#m-leeren").onclick=offlineAufraeumen;
@@ -403,6 +559,7 @@ async function oeffneDatei(e){
   if(!e||!e.fid){toast("Datei auf dem Handy nicht verfügbar.");return}
   if(V.offen)return;
   const v=$("#viewer");V.e=e;V.offen=true;$("#viewer-titel").textContent=e.titel||e.name;$("#seitenzahl").textContent="";$("#viewer-leiste").classList.add("versteckt");
+  $("#viewer-edit").classList.toggle("versteckt",!((e.kategorie==="notizen"||e.kategorie==="berichte")&&["md","txt"].includes(String(e.ext||"").toLowerCase())));
   v.classList.add("offen");vAufraeumen();vMeldung("Entschlüssele …");
   try{const{blob,url}=await holeBlob(e);if(!V.offen||V.e!==e)return;const t=String(e.ext||"").toLowerCase();const inh=$("#viewer-inhalt");
     if(t==="pdf")await zeigePdf(blob);
@@ -414,7 +571,7 @@ async function oeffneDatei(e){
   }catch(x){vMeldung("Fehler: "+fehlerText(x))}
 }
 function viewerSchliessen(){V.offen=false;$("#viewer").classList.remove("offen");setTimeout(()=>{if(!V.offen)vAufraeumen()},260)}
-$("#viewer-zu").onclick=viewerSchliessen;$("#viewer-teilen").onclick=ev=>{if(V.e)teileDatei(V.e,ev.currentTarget)};
+$("#viewer-zu").onclick=viewerSchliessen;$("#viewer-teilen").onclick=ev=>{if(V.e)teileDatei(V.e,ev.currentTarget)};$("#viewer-edit").onclick=()=>{if(V.e)bearbeiteEintrag(V.e)};
 async function zeigePdf(blob){
   const pdfjs=await ladePdfJs();vMeldung("Lade PDF …");
   const doc=await pdfjs.getDocument({data:new Uint8Array(await blob.arrayBuffer())}).promise;if(!V.offen){doc.destroy();return}
@@ -454,15 +611,16 @@ function zeigeTab(t){TAB=t;$$("nav.leiste button").forEach(b=>b.classList.toggle
 $$("nav.leiste button").forEach(b=>b.onclick=()=>zeigeTab(b.dataset.tab));
 function kopf(){$("#kopf-titel").textContent=(M.projekt&&M.projekt.kurz)||"Dr.-Ing. Mobil";$("#kopf-stand").textContent=M.erstellt?fmtZeit(M.erstellt):""}
 function setzeOffline(v){OFFLINE=v;$("#kopf-offline").classList.toggle("versteckt",!v)}
-window.addEventListener("online",()=>{setzeOffline(false);pruefeAktualisierung()});window.addEventListener("offline",()=>setzeOffline(true));
+window.addEventListener("online",()=>{setzeOffline(false);pruefeAktualisierung();postfachSenden()});window.addEventListener("offline",()=>setzeOffline(true));
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"&&M)postfachSenden()});
 async function pruefeAktualisierung(laut){
-  try{const idx=await ladeIndex();if(idx.build&&SESSION&&idx.build!==SESSION.build){const s=await pruefePasswortAusSession(idx);if(s){SESSION=s;sitzungSpeichern(s,!!sitzungLesen()?.merken);M=await ladeManifest(s);kopf();zeigeTab(TAB);toast("Neuer Stand geladen")}else{toast("Passwort geändert – bitte neu anmelden");abmelden()}}else if(laut)toast("Schon aktuell")}
+  try{const idx=await ladeIndex();if(idx.build&&SESSION&&idx.build!==SESSION.build){const s=await pruefePasswortAusSession(idx);if(s){SESSION=s;sitzungSpeichern(s,!!sitzungLesen()?.merken);M=await ladeManifest(s);notizenAbgleichen();kopf();zeigeTab(TAB);toast("Neuer Stand geladen")}else{toast("Passwort geändert – bitte neu anmelden");abmelden()}}else if(laut)toast("Schon aktuell")}
   catch(e){if(laut)toast(fehlerText(e))}
 }
 async function pruefePasswortAusSession(idx){const s=sitzungLesen();const pw=s&&s.s&&s.s.pw;return pw?pruefePasswort(pw,idx):null}
 function abmelden(){sitzungVerwerfen();SESSION=null;M=null;vaultKeys.clear();blobCache.clear();$("#app").classList.remove("offen");$("#login").style.display="flex";$("#pw").value="";loginStatus("")}
 function loginStatus(t,f){const s=$("#login-status");s.textContent=t;s.classList.toggle("fehler",!!f)}
-function appZeigen(){$("#login").style.display="none";$("#app").classList.add("offen");kopf();zeigeTab(TAB)}
+function appZeigen(){$("#login").style.display="none";$("#app").classList.add("offen");notizenLaden();notizenAbgleichen();kopf();zeigeTab(TAB);setTimeout(()=>postfachSenden(),800)}
 async function anmelden(pw,merken){
   if(!pw)return false;loginStatus("Prüfe Passwort …");$("#login-form button").disabled=true;
   try{INDEX=INDEX||await ladeIndex();const s=await pruefePasswort(pw,INDEX);if(!s){loginStatus("Passwort stimmt nicht.",true);return false}
@@ -481,7 +639,7 @@ $("#kopf-neu").onclick=()=>pruefeAktualisierung(true);
   if(qrPw){$("#pw").value=qrPw;$("#merken").checked=true;if(await anmelden(qrPw,true))return;}
   const alt=sitzungLesen();
   if(alt&&alt.s&&alt.s.vaults){SESSION=alt.s;try{M=await ladeManifest(SESSION);appZeigen();pruefeAktualisierung()}catch(e){if(e.status===404){toast("Tresor wurde neu gebaut – bitte neu anmelden");abmelden()}else{loginStatus(fehlerText(e),true)}}}
-  document.addEventListener("keydown",ev=>{if(ev.key==="Escape"){if(V.offen)viewerSchliessen();else blattSchliessen()}});
+  document.addEventListener("keydown",ev=>{if(ev.key==="Escape"){if(E)editorSchliessen();else if(V.offen)viewerSchliessen();else blattSchliessen()}});
 })();
 </script>
 </body>
