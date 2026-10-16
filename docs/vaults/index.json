@@ -2,8 +2,8 @@
  "v": 1,
  "portal": "dr-ing-mobil",
  "titel": "E-Lkw · Ladeinfrastruktur · Netzrückwirkungen",
- "erstellt": "2026-10-15T18:26:36",
- "build": "16fd335527e7",
+ "erstellt": "2026-10-16T04:29:20",
+ "build": "f5e75989f7fd",
  "kdf": {
   "typ": "PBKDF2-SHA256",
   "iter": 600000
@@ -11,7 +11,7 @@
  "principals": [
   {
    "id": "p1",
-   "salt": "BykAt1KjAaKFWDDG5KIFxA=="
+   "salt": "e3y+SfisA/F2QOgoJ0C9kg=="
   }
  ],
  "vaults": [
@@ -19,8 +19,8 @@
    "id": "f65a64d5e673a7c1",
    "wraps": [
     {
-     "iv": "mcm/Ds1kj3MObF0x",
-     "ct": "eoFSfgyECSnBC704kS1e80Y5aqcuIyJ2vxo+4BjC4dn2WHWWBnGwCJQgiyj1iq9pNhTs6uIlHXZRJBib/Oma5pAfzIQqjKoYPed3PM6OW7/7IUHBkzgk9/icHelJdhEmD8sWWKHNFZhbLVKlOV7hBhaO5Omg",
+     "iv": "9tr440jXC2UlcXFq",
+     "ct": "6PV6yylfWjhzbx0HaAnNfR8uBu73PbwrYhTsNMoB4MdgmrP9V/PUN4WZZI8y9B4rhCVJGY1V0LubNuRXT3JmtPSdrDNV8MrzSXkGN32gDk/yT/V7x6Hx7LG5zTfk9nQ4zVsW5568TzhjCL3o0VUU67eV58FX",
      "p": "p1"
     }
    ],
