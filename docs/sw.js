@@ -17,7 +17,9 @@ self.addEventListener("install", ev => {
 self.addEventListener("activate", ev => {
   ev.waitUntil((async () => {
     const namen = await caches.keys();
-    await Promise.all(namen.filter(n => n !== CACHE).map(n => caches.delete(n)));
+    // Alle Portale teilen sich den Origin temmchen.github.io: nur die EIGENEN alten Caches (dring-…) löschen,
+    // sonst verschwänden die Offline-Speicher der anderen Portale (seit 20.10.2026).
+    await Promise.all(namen.filter(n => n.startsWith("dring-") && n !== CACHE).map(n => caches.delete(n)));
     await self.clients.claim();
   })());
 });
