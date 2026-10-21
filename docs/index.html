@@ -527,8 +527,7 @@ async function fuerUnterwegs(liste,knopf){
   }catch(e){toast("Laden fehlgeschlagen: "+fehlerText(e))}
   knopf.disabled=false;
 }
-async function offlineAufraeumen(){try{const namen=await caches.keys();for(const nm of namen)if(nm.startsWith("dring-"))await caches.delete(nm);   /* nur eigene Caches – der Origin gehört allen Portalen */
-blobCache.clear();toast("Offline-Daten gelöscht")}catch(e){toast(fehlerText(e))}}
+async function offlineAufraeumen(){try{const namen=await caches.keys();for(const nm of namen)await caches.delete(nm);blobCache.clear();toast("Offline-Daten gelöscht")}catch(e){toast(fehlerText(e))}}
 
 /* ─────────────────────────── Blatt / Overlay ─────────────────────────── */
 function blattOeffnen(titel,html){const b=$("#blatt"),o=$("#overlay");$("#blatt-titel").textContent=titel;$("#blatt-inhalt").innerHTML=html;$("#blatt-inhalt").scrollTop=0;b.classList.remove("versteckt");o.classList.remove("versteckt");requestAnimationFrame(()=>{b.classList.add("offen");o.classList.add("offen")})}
